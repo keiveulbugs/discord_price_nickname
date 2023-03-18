@@ -72,6 +72,7 @@ async fn main() {
             // it uses that line to place in new commands at the right position.
             // Might change this in the future, but am lazy and this was the easiest.
             commands::nickname::nickname(),
+            commands::cancel::cancel(),
 commands::help::help(),
         ],
         ..Default::default()
