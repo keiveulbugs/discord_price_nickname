@@ -65,7 +65,7 @@ async fn main() {
     // Build our client.
     let client = poise::Framework::builder()
     .token(DISCORD_TOKEN)
-    .intents(serenity::GatewayIntents::GUILDS | serenity::GatewayIntents::GUILD_MEMBERS)
+    .intents(serenity::GatewayIntents::GUILDS)
     .options(poise::FrameworkOptions {
         commands: vec![
             // Do not remove the help command,
