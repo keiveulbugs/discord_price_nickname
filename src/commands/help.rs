@@ -1,5 +1,5 @@
 use crate::Error;
-use poise::serenity_prelude::{self as serenit, ChannelId};
+use poise::serenity_prelude::ChannelId;
 use serenity::utils::Colour;
 
 /// About command

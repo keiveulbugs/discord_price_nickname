@@ -1,5 +1,4 @@
 use crate::Error;
-use poise::serenity_prelude::{self as serenit, ChannelId};
 use serenity::utils::Colour;
 use serde_derive::Deserialize;
 use serde_json::Value;
@@ -141,7 +140,7 @@ async fn vectorinfo(url: &str) -> Result<Resultstruct, Error> {
     Ok(finalstruct)
 }
 
-
+#[allow(dead_code)]
 async fn vectorinfoinverseinbase(url: &str) -> Result<Resultstruct, Error> {
     let v = reqwest::get(url)
         .await
