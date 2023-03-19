@@ -73,6 +73,7 @@ async fn main() {
             // Might change this in the future, but am lazy and this was the easiest.
             commands::nickname::nickname(),
             commands::cancel::cancel(),
+            commands::icon::icon(),
 commands::help::help(),
         ],
         ..Default::default()

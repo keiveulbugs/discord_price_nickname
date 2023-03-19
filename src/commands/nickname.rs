@@ -5,6 +5,7 @@ use serde_json::Value;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::Path;
+use serenity::model::prelude::Activity;
 
 #[allow(dead_code)]
 #[derive(Debug, Deserialize)]
@@ -87,6 +88,7 @@ pub async fn nickname(ctx: poise::Context<'_, (), Error>,
             let content = std::fs::read_to_string(&filename)?;
             let result = vectorinfo(&content).await?;
             let nickname = format!("{} | {}", result.usd, result.change);
+            serenity::prelude::Context::set_activity(ctx.serenity_context(), Activity::watching(result.name)).await;
             guildid.edit_nickname(ctx, Some(nickname.as_str())).await?;
         };
         tokio::time::sleep(std::time::Duration::from_secs(300)).await;
