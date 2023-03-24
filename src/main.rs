@@ -74,7 +74,7 @@ async fn main() {
             commands::nickname::nickname(),
             commands::cancel::cancel(),
             commands::icon::icon(),
-commands::help::help(),
+            commands::help::help(),
         ],
         ..Default::default()
     })

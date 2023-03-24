@@ -10,6 +10,8 @@ pub async fn icon(ctx: poise::Context<'_, (), Error>,
     //ctx.send("hello").await?;
 
     let file = &icon.url;
+    let bitsandbytes = reqwest::get(file).await?;
+    let bitsies = bitsandbytes.bytes().await?;
     println!("{}", file);
     println!("{:#?}", icon);
 
