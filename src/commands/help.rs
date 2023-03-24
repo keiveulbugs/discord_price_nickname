@@ -5,7 +5,7 @@ use anyhow::Context as _;
 
 /// About command
 #[poise::command(slash_command)]
-pub async fn help(ctx: Context<'_>) -> Result<(), Error> {
+pub async fn help(ctx: poise::Context<'_>) -> Result<(), Error> {
     ctx.send(|b| {
         b.embed(|b| b.description(
             "This bot sets prices as nickname"

@@ -5,7 +5,7 @@ use anyhow::Context as _;
 
 /// About command
 #[poise::command(slash_command)]
-pub async fn icon(ctx: Context<'_>,
+pub async fn icon(ctx: poise::Context<'_>,
 #[description = "Enter the smart contract address of the pair"] icon: Attachment,
 ) -> Result<(), Error> {
     //ctx.send("hello").await?;
