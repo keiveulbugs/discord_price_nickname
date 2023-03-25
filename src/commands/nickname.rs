@@ -1,4 +1,5 @@
 use crate::Error;
+use crate::Data;
 use serenity::utils::Colour;
 use serde_derive::Deserialize;
 use serde_json::Value;
@@ -54,7 +55,7 @@ pub struct Resultstruct {
 
 /// Get info on a coin by entering their symbol
 #[poise::command(slash_command)]
-pub async fn nickname(ctx: poise::Context<'_>,     
+pub async fn nickname(ctx: poise::Context<'_, Data, Error>,     
     #[description = "Enter the smart contract address of the pair"] address: String,
     #[description = "Enter the chain id according to dexscreener"] chainid: String,
 ) -> Result<(), Error> {

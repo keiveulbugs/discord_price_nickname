@@ -1,11 +1,13 @@
 use crate::Error;
+use crate::Data;
+
 use poise::serenity_prelude::ChannelId;
 use serenity::utils::Colour;
 use anyhow::Context as _;
 
 /// About command
 #[poise::command(slash_command)]
-pub async fn help(ctx: poise::Context<'_>) -> Result<(), Error> {
+pub async fn help(ctx: poise::Context<'_, Data, Error>) -> Result<(), Error> {
     ctx.send(|b| {
         b.embed(|b| b.description(
             "This bot sets prices as nickname"

@@ -1,8 +1,9 @@
 use crate::Error;
+use crate::Data;
 use anyhow::Context as _;
 
 #[poise::command(slash_command)]
-pub async fn cancel(ctx: poise::Context<'_>) -> Result<(), Error> {
+pub async fn cancel(ctx: poise::Context<'_, Data, Error>) -> Result<(), Error> {
     let filename = format!("bot{}", ctx.framework().bot_id);
     
     if std::path::Path::new(&filename).exists() {
