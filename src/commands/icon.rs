@@ -1,18 +1,12 @@
 use crate::Error;
-use poise::serenity_prelude::{self as serenit, ChannelId, Attachment, CacheHttp, Context};
-use serenity::utils::Colour;
-use std::io;
-use std::fs::File;
+use poise::serenity_prelude::{Attachment, CacheHttp};
 use std::io::Cursor;
-use poise::serenity_prelude::EditProfile;
 
 
-/// About command
 #[poise::command(slash_command)]
 pub async fn icon(ctx: poise::Context<'_, (), Error>,
 #[description = "Upload a logo"] icon: Attachment,
 ) -> Result<(), Error> {
-    //ctx.send("hello").await?;
    
 
     let fileurl = &icon.url;
