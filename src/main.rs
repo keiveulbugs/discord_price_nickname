@@ -1,11 +1,14 @@
 mod commands;
 use poise::serenity_prelude::{self as serenity};
-
+use std::sync::atomic::AtomicBool;
 type Error = Box<dyn std::error::Error + Send + Sync>;
 
 #[macro_use]
 //.env variables
 extern crate dotenv_codegen;
+
+
+pub static STOPBOOL: AtomicBool = AtomicBool::new(false);
 
 //Constants
 // Your Bot token

@@ -1,15 +1,10 @@
-use crate::Error;
+use crate::{Error, STOPBOOL};
+use std::sync::atomic::Ordering::Relaxed;
 
-#[poise::command(slash_command)]
+// This command stops the bribe checking
+#[poise::command(slash_command, guild_only = true, default_member_permissions = "ADMINISTRATOR")]
 pub async fn cancel(ctx: poise::Context<'_, (), Error>) -> Result<(), Error> {
-    let filename = format!("bot{}", ctx.framework().bot_id);
-    
-    if std::path::Path::new(&filename).exists() {
-        std::fs::remove_file(&filename)?;
-        ctx.send(|b| b.content("**Deleted the config file. The bot will stop updating its name at the next iteration.**").ephemeral(true)).await?;
-
-    } else {
-        ctx.send(|b| b.content("**There doesn't seem to be a config file for the bot.**").ephemeral(true)).await?;
-    };
+    STOPBOOL.swap(true, Relaxed);
+    ctx.send(|b| b.content("Stopping the nickname-bot. If everything goes well, you should soon see a message that the bot was stopped originating from the other command.").ephemeral(true)).await?;
     Ok(())
 }

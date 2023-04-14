@@ -1,4 +1,4 @@
-use crate::Error;
+use crate::{Error, STOPBOOL};
 use serenity::utils::Colour;
 use serde_derive::Deserialize;
 use serde_json::Value;
@@ -52,46 +52,36 @@ pub struct Resultstruct {
 
 
 /// Get info on a coin by entering their symbol
-#[poise::command(slash_command)]
+#[poise::command(slash_command, guild_only = true, default_member_permissions = "ADMINISTRATOR")]
 pub async fn nickname(ctx: poise::Context<'_, (), Error>,     
     #[description = "Enter the smart contract address of the pair"] address: String,
     #[description = "Enter the chain id according to dexscreener"] chainid: String,
 ) -> Result<(), Error> {
+    STOPBOOL.swap(false, std::sync::atomic::Ordering::Relaxed);
 
     let url = format!("https://api.dexscreener.com/latest/dex/pairs/{}/{}", chainid, address);
-    
-    let filename = format!("bot{}", ctx.framework().bot_id);
-    
-    if Path::new(&filename).exists() {
-        std::fs::remove_file(&filename)?;
-    };
-
-    // need to clear all data from file
-    let mut envfile = OpenOptions::new()
-        .write(true)
-        .create(true)
-        .append(true)
-        .open(&filename).map_err(|_| "Couldn't create a new save file or open it")?;
-
-    envfile.write_all(url.as_bytes()).map_err(|_| "Couldn't save the address")?;
-    
-    ctx.send(|b| b.content("**Saved the token / coin to the config file**").ephemeral(true)).await?;
     
     ctx.send(|b| b.content("**Set nickname and start updating every 5 minutes**").ephemeral(true)).await?;
     let guildid = ctx.guild_id().unwrap();
     'outer: loop {
-        if !Path::new(&filename).exists() {
-            ctx.send(|b| b.content("Couldn't find an address! No longer updating the nickname").ephemeral(true))
-            .await?;
+        if STOPBOOL.load(std::sync::atomic::Ordering::Relaxed) {
+            ctx.say("Stopped updating the nickname of the bot").await?;
             break 'outer;
-        } else {
-            let content = std::fs::read_to_string(&filename)?;
-            let result = vectorinfo(&content).await?;
-            let nickname = format!("{} | {}", result.usd, result.change);
-            serenity::prelude::Context::set_activity(ctx.serenity_context(), Activity::watching(result.name)).await;
-            guildid.edit_nickname(ctx, Some(nickname.as_str())).await?;
         };
-        tokio::time::sleep(std::time::Duration::from_secs(300)).await;
+
+        let resultresult = vectorinfo(&url).await;
+        match resultresult {
+            Ok(result) => {
+                let nickname = format!("{} | {}", result.usd, result.change);
+                serenity::prelude::Context::set_activity(ctx.serenity_context(), Activity::watching(result.name)).await;
+                match guildid.edit_nickname(ctx, Some(nickname.as_str())).await {
+                    Ok(val) => val,
+                    Err(_) => {continue 'outer;},
+                };
+                tokio::time::sleep(std::time::Duration::from_secs(300)).await;
+            },
+            Err(_) => {tokio::time::sleep(std::time::Duration::from_secs(300)).await;}
+        };
 
 
     }
