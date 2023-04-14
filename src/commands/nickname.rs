@@ -1,8 +1,7 @@
 use crate::{Error, STOPBOOL};
+use serenity::utils::Colour;
 use serde_derive::Deserialize;
 use serde_json::Value;
-use serenity::utils::Colour;
-
 use serenity::model::prelude::Activity;
 
 #[allow(dead_code)]
@@ -48,29 +47,18 @@ pub struct Resultstruct {
     pub urlresult: String,
 }
 
+
 /// Get info on a coin by entering their symbol
-#[poise::command(
-    slash_command,
-    guild_only = true,
-    default_member_permissions = "ADMINISTRATOR"
-)]
-pub async fn nickname(
-    ctx: poise::Context<'_, (), Error>,
+#[poise::command(slash_command, guild_only = true, default_member_permissions = "ADMINISTRATOR")]
+pub async fn nickname(ctx: poise::Context<'_, (), Error>,     
     #[description = "Enter the smart contract address of the pair"] address: String,
     #[description = "Enter the chain id according to dexscreener"] chainid: String,
 ) -> Result<(), Error> {
     STOPBOOL.swap(false, std::sync::atomic::Ordering::Relaxed);
 
-    let url = format!(
-        "https://api.dexscreener.com/latest/dex/pairs/{}/{}",
-        chainid, address
-    );
-
-    ctx.send(|b| {
-        b.content("**Set nickname and start updating every 5 minutes**")
-            .ephemeral(true)
-    })
-    .await?;
+    let url = format!("https://api.dexscreener.com/latest/dex/pairs/{}/{}", chainid, address);
+    
+    ctx.send(|b| b.content("**Set nickname and start updating every 5 minutes**").ephemeral(true)).await?;
     let guildid = ctx.guild_id().unwrap();
     'outer: loop {
         if STOPBOOL.load(std::sync::atomic::Ordering::Relaxed) {
@@ -82,25 +70,27 @@ pub async fn nickname(
         match resultresult {
             Ok(result) => {
                 let nickname = format!("{} | {}", result.usd, result.change);
-                serenity::prelude::Context::set_activity(
-                    ctx.serenity_context(),
-                    Activity::watching(result.name),
-                )
-                .await;
+                serenity::prelude::Context::set_activity(ctx.serenity_context(), Activity::watching(result.name)).await;
                 match guildid.edit_nickname(ctx, Some(nickname.as_str())).await {
                     Ok(val) => val,
-                    Err(_) => {
-                        continue 'outer;
-                    }
+                    Err(_) => {tokio::time::sleep(std::time::Duration::from_secs(300)).await;
+                        continue 'outer;},
                 };
                 tokio::time::sleep(std::time::Duration::from_secs(300)).await;
-            }
-            Err(_) => {
-                tokio::time::sleep(std::time::Duration::from_secs(300)).await;
-            }
+            },
+            Err(_) => {tokio::time::sleep(std::time::Duration::from_secs(300)).await;}
         };
+
+
     }
 
+
+
+
+    
+
+
+    
     Ok(())
 }
 
