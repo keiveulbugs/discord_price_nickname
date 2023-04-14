@@ -7,7 +7,6 @@ type Error = Box<dyn std::error::Error + Send + Sync>;
 //.env variables
 extern crate dotenv_codegen;
 
-
 pub static STOPBOOL: AtomicBool = AtomicBool::new(false);
 
 //Constants
@@ -67,29 +66,27 @@ async fn on_ready(
 async fn main() {
     // Build our client.
     let client = poise::Framework::builder()
-    .token(DISCORD_TOKEN)
-    .intents(serenity::GatewayIntents::GUILDS)
-    .options(poise::FrameworkOptions {
-        commands: vec![
-            // Do not remove the help command,
-            // it uses that line to place in new commands at the right position.
-            // Might change this in the future, but am lazy and this was the easiest.
-            commands::nickname::nickname(),
-            commands::cancel::cancel(),
-            commands::icon::icon(),
-            commands::help::help(),
-        ],
-        ..Default::default()
-    })
-    .setup(|ctx, ready, framework| Box::pin(on_ready(ctx, ready, framework)))
-    .build()
-    .await
-    .expect("Error creating client");
-
+        .token(DISCORD_TOKEN)
+        .intents(serenity::GatewayIntents::GUILDS)
+        .options(poise::FrameworkOptions {
+            commands: vec![
+                // Do not remove the help command,
+                // it uses that line to place in new commands at the right position.
+                // Might change this in the future, but am lazy and this was the easiest.
+                commands::nickname::nickname(),
+                commands::cancel::cancel(),
+                commands::icon::icon(),
+                commands::help::help(),
+            ],
+            ..Default::default()
+        })
+        .setup(|ctx, ready, framework| Box::pin(on_ready(ctx, ready, framework)))
+        .build()
+        .await
+        .expect("Error creating client");
 
     // Start client, show error, and then ask user to provide bot secret as that is the most common cause for failure
     if let Err(why) = client.start().await {
-    println!("Client error: {:?}\n\n**********************\nTry entering a working bot-secret in the .env file", why);
+        println!("Client error: {:?}\n\n**********************\nTry entering a working bot-secret in the .env file", why);
     }
 }
-

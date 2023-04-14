@@ -6,10 +6,12 @@ use serenity::utils::Colour;
 #[poise::command(slash_command)]
 pub async fn help(ctx: poise::Context<'_, (), Error>) -> Result<(), Error> {
     ctx.send(|b| {
-        b.embed(|b| b.description(
-            "This bot sets prices as nickname"
-            ).title("help").colour(Colour::BLITZ_BLUE))
-            .ephemeral(true)          
+        b.embed(|b| {
+            b.description("This bot sets prices as nickname")
+                .title("help")
+                .colour(Colour::BLITZ_BLUE)
+        })
+        .ephemeral(true)
     })
     .await?;
     //When the message is sent in your private channel, return the option to deregister the bot.
