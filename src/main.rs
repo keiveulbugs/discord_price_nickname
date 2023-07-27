@@ -1,7 +1,26 @@
 mod commands;
-use poise::serenity_prelude::{self as serenity};
+use poise::serenity_prelude::GuildId;
+use poise::serenity_prelude::{self as serenity, ChannelId};
+use std::io::BufWriter;
+use std::io::Write;
 use std::sync::atomic::AtomicBool;
 type Error = Box<dyn std::error::Error + Send + Sync>;
+use ron::ser::{to_string_pretty, PrettyConfig};
+use serde::Serialize;
+use serde::Deserialize;
+use ron::de::from_reader;
+use tracing::Level;
+
+use crate::commands::nickname::vectorinfo;
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Config {
+    address: String,
+    server: GuildId,
+    channel: u64,
+    chain : String,
+}
+
 
 #[macro_use]
 //.env variables
@@ -22,6 +41,62 @@ async fn on_ready(
 ) -> Result<(), Error> {
     // To announce that the bot is online.
     println!("{} is connected!", ready.user.name);
+    let filename = format!("{}.ron", ready.user.name);
+
+
+    if std::path::Path::exists(std::path::Path::new(&filename)) {
+        let f = std::fs::File::open(filename).expect("Failed opening file");
+        let config: Config = match from_reader(f) {
+            Ok(x) => x,
+            Err(e) => {
+                println!("Failed to load config: {}", e);
+    
+                std::process::exit(1);
+            }
+        };
+        let url = format!("https://api.dexscreener.com/latest/dex/pairs/{}/{}", config.chain, config.address);
+
+
+        let chanid = ChannelId(config.channel);
+        let guild = config.server;
+        chanid.send_message(ctx.http.clone(), |f| {f.content("*The bot restarted*")}).await?;
+
+        'outer: loop {
+            if STOPBOOL.load(std::sync::atomic::Ordering::Relaxed) {
+                chanid.send_message(ctx.clone().http, |f| {f.content("Stopped updating the nickname of the bot")}).await?;
+                
+                
+                // ("Stopped updating the nickname of the bot").await?;
+                break 'outer;
+            };
+    
+            let resultresult = vectorinfo(&url).await;
+            match resultresult {
+                Ok(result) => {
+                    let nickname = format!("{} | {}", result.usd, result.change);
+                    // serenity::prelude::Context::set_activity(ctx.serenity_context(), Activity::watching(result.name)).await;
+                    poise::serenity_prelude::Context::set_activity(ctx, serenity::model::gateway::Activity::watching(result.name)).await;
+                    match guild.edit_nickname(ctx, Some(nickname.as_str())).await {
+                        Ok(val) => val,
+                        Err(_) => {tokio::time::sleep(std::time::Duration::from_secs(300)).await;
+                            continue 'outer;},
+                    };
+                    tokio::time::sleep(std::time::Duration::from_secs(300)).await;
+                },
+                Err(_) => {tokio::time::sleep(std::time::Duration::from_secs(300)).await;}
+            };
+    
+    
+        }
+    
+
+
+
+    } else {
+        println!("No preset config");
+    }
+    
+
 
     // This registers commands for the bot, guild commands are instantly active on specified servers
     //
@@ -38,10 +113,10 @@ async fn on_ready(
         })
         .await;
     // This line runs on start-up to tell you which commands succesfully booted.
-    println!(
-        "I now have the following guild slash commands: \n{:#?}",
-        commands
-    );
+    // println!(
+    //     "I now have the following guild slash commands: \n{:#?}",
+    //     commands
+    // );
 
     // Below we register Global commands, global commands can take some time to update on all servers the bot is active in
     //
@@ -53,10 +128,10 @@ async fn on_ready(
             commands
         })
         .await;
-    println!(
-        "I now have the following guild slash commands: \n{:#?}",
-        global_command1
-    );
+    // println!(
+    //     "I now have the following guild slash commands: \n{:#?}",
+    //     global_command1
+    // );
 
     Ok(())
 }
@@ -64,6 +139,13 @@ async fn on_ready(
 #[allow(unused_doc_comments)]
 #[tokio::main]
 async fn main() {
+
+    // let subscriber = tracing_subscriber::FmtSubscriber::builder()
+    // .with_max_level(Level::DEBUG)
+    // .finish();
+
+    // tracing::subscriber::set_global_default(subscriber)
+    //     .map_err(|_err| eprintln!("Unable to set global default subscriber"));
     // Build our client.
     let client = poise::Framework::builder()
         .token(DISCORD_TOKEN)
@@ -76,6 +158,7 @@ async fn main() {
                 commands::nickname::nickname(),
                 commands::cancel::cancel(),
                 commands::icon::icon(),
+                // commands::nicknamefunction::nicknamefunction(),
                 commands::help::help(),
             ],
             ..Default::default()

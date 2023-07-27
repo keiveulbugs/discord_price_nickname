@@ -1,8 +1,22 @@
 use crate::{Error, STOPBOOL};
+use poise::serenity_prelude::GuildId;
 use serenity::utils::Colour;
 use serde_derive::Deserialize;
 use serde_json::Value;
 use serenity::model::prelude::Activity;
+use ron::ser::{to_string_pretty, PrettyConfig};
+use serde::Serialize;
+use ron::de::from_reader;
+use std::io::BufWriter;
+use std::io::Write;
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Config {
+    address: String,
+    server: GuildId,
+    channel: u64,
+    chain: String,
+}
 
 #[allow(dead_code)]
 #[derive(Debug, Deserialize)]
@@ -56,6 +70,21 @@ pub async fn nickname(ctx: poise::Context<'_, (), Error>,
 ) -> Result<(), Error> {
     STOPBOOL.swap(false, std::sync::atomic::Ordering::Relaxed);
 
+    let data = Config {
+        address : address.clone(),
+        server : ctx.guild_id().unwrap(),
+        channel : ctx.channel_id().into(),
+        chain : chainid.clone()
+    };
+    let botname = ctx.framework().bot_id.to_user(ctx).await?.name;
+
+    let filename = format!("{}.ron", botname);
+
+    let file = std::fs::File::create(filename.clone()).unwrap();
+    let mut writer = BufWriter::new(file);
+    ron::ser::to_writer(&mut writer, &data)?;
+    writer.flush()?;
+
     let url = format!("https://api.dexscreener.com/latest/dex/pairs/{}/{}", chainid, address);
     
     ctx.send(|b| b.content("**Set nickname and start updating every 5 minutes**").ephemeral(true)).await?;
@@ -94,7 +123,7 @@ pub async fn nickname(ctx: poise::Context<'_, (), Error>,
     Ok(())
 }
 
-async fn vectorinfo(url: &str) -> Result<Resultstruct, Error> {
+pub async fn vectorinfo(url: &str) -> Result<Resultstruct, Error> {
     let v = reqwest::get(url)
         .await
         .map_err(|_| "The dexscreener api can not be reached")?
